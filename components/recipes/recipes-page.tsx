@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { getRecipes, getCuisines } from '@/lib/api/recipes-service';
-import { initializeDatabase } from '@/lib/api/init-db';
 import { Recipe, FilterParams, RecipesResponse } from '@/lib/types';
 import FiltersBar from './filters-bar';
 import RecipesTable from './recipes-table';
@@ -26,17 +25,13 @@ export default function RecipesPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Initialize database and fetch cuisines on mount
+  // Load available cuisines on mount
   useEffect(() => {
-    async function initializeApp() {
-      // Initialize database if needed
-      await initializeDatabase();
-      
-      // Load available cuisines
+    async function loadCuisinesData() {
       const data = await getCuisines();
       setCuisines(data);
     }
-    initializeApp();
+    loadCuisinesData();
   }, []);
 
   // Fetch recipes when filters or page changes

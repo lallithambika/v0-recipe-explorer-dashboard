@@ -1,5 +1,28 @@
-import { supabase } from '@/lib/supabase';
 import { Recipe, FilterParams, RecipesResponse } from '@/lib/types';
+import recipesData from '@/data/recipes.json';
+
+// Convert JSON data format to Recipe format
+function convertRecipeData(rawData: any): Recipe[] {
+  return Object.values(rawData).map((item: any, index: number) => ({
+    id: String(index),
+    title: item.title,
+    cuisine: item.cuisine,
+    rating: item.rating,
+    total_time: item.total_time,
+    prep_time: item.prep_time,
+    cook_time: item.cook_time,
+    description: item.description,
+    ingredients: item.ingredients,
+    instructions: item.instructions,
+    nutrients: item.nutrients,
+    serves: item.serves,
+    URL: item.URL,
+    Country_State: item.Country_State,
+    Contient: item.Contient,
+  }));
+}
+
+const allRecipes = convertRecipeData(recipesData);
 
 export async function getRecipes(
   page: number = 1,
@@ -7,49 +30,42 @@ export async function getRecipes(
   filters?: Partial<FilterParams>
 ): Promise<RecipesResponse> {
   try {
-    const offset = (page - 1) * limit;
-    let query = supabase
-      .from('recipes')
-      .select('*', { count: 'exact' })
-      .order('rating', { ascending: false });
+    let filtered = [...allRecipes];
 
     // Apply filters
     if (filters?.search) {
-      query = query.or(
-        `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (recipe) =>
+          recipe.title.toLowerCase().includes(searchLower) ||
+          recipe.description.toLowerCase().includes(searchLower)
       );
     }
 
     if (filters?.cuisine && filters.cuisine !== 'all') {
-      query = query.eq('cuisine', filters.cuisine);
+      filtered = filtered.filter((recipe) => recipe.cuisine === filters.cuisine);
     }
 
     if (filters?.minRating) {
-      query = query.gte('rating', filters.minRating);
+      filtered = filtered.filter((recipe) => recipe.rating >= filters.minRating!);
     }
 
     if (filters?.maxTime) {
-      query = query.lte('total_time', filters.maxTime);
+      filtered = filtered.filter((recipe) => recipe.total_time <= filters.maxTime!);
     }
 
-    const { data, count, error } = await query
-      .range(offset, offset + limit - 1);
+    // Sort by rating descending
+    filtered.sort((a, b) => b.rating - a.rating);
 
-    if (error) {
-      return {
-        data: [],
-        count: 0,
-        page,
-        total_pages: 0,
-        error: error.message,
-      };
-    }
-
-    const total_pages = count ? Math.ceil(count / limit) : 0;
+    // Pagination
+    const count = filtered.length;
+    const offset = (page - 1) * limit;
+    const paginatedData = filtered.slice(offset, offset + limit);
+    const total_pages = Math.ceil(count / limit);
 
     return {
-      data: (data || []) as Recipe[],
-      count: count || 0,
+      data: paginatedData,
+      count,
       page,
       total_pages,
     };
@@ -72,18 +88,7 @@ export async function searchRecipes(
 
 export async function getRecipeById(id: string): Promise<Recipe | null> {
   try {
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching recipe:', error);
-      return null;
-    }
-
-    return data as Recipe;
+    return allRecipes.find((recipe) => recipe.id === id) || null;
   } catch (error) {
     console.error('Error fetching recipe:', error);
     return null;
@@ -92,21 +97,9 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
 
 export async function getCuisines(): Promise<string[]> {
   try {
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('cuisine')
-      .distinct();
-
-    if (error) {
-      console.error('Error fetching cuisines:', error);
-      return [];
-    }
-
-    const cuisines = (data || [])
-      .map((item: { cuisine: string }) => item.cuisine)
+    const cuisines = [...new Set(allRecipes.map((recipe) => recipe.cuisine))]
       .filter(Boolean)
       .sort();
-
     return cuisines;
   } catch (error) {
     console.error('Error fetching cuisines:', error);
