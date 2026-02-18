@@ -24,12 +24,17 @@ export interface Recipe {
   prep_time: number;
   cook_time: number;
   description: string;
-  serves: number;
-  ingredients: Ingredient[];
-  instructions: Instruction[];
-  nutrients: Nutrients;
-  created_at: string;
-  updated_at: string;
+  serves: string;
+  ingredients: string[];
+  instructions: string[];
+  nutrients: {
+    [key: string]: string;
+  };
+  URL?: string;
+  Country_State?: string;
+  Contient?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface FilterParams {

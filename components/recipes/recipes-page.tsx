@@ -27,10 +27,15 @@ export default function RecipesPage() {
 
   // Load available cuisines on mount
   useEffect(() => {
-    async function loadCuisinesData() {
-      const data = await getCuisines();
-      setCuisines(data);
-    }
+    const loadCuisinesData = async () => {
+      try {
+        const data = await getCuisines();
+        setCuisines(data || []);
+      } catch (err) {
+        console.error('[v0] Error loading cuisines:', err);
+        setCuisines([]);
+      }
+    };
     loadCuisinesData();
   }, []);
 

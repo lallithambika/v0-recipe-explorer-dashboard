@@ -95,11 +95,10 @@ export default function RecipeDrawer({
               Ingredients
             </h3>
             <ul className="space-y-2">
-              {recipe.ingredients.map((ingredient, idx) => (
-                <li key={idx} className="flex items-center justify-between py-2 border-b border-border/30 last:border-b-0">
-                  <span className="text-foreground">{ingredient.name}</span>
-                  <span className="text-sm text-muted-foreground font-medium">
-                    {ingredient.amount}
+              {recipe.ingredients && recipe.ingredients.map((ingredient, idx) => (
+                <li key={idx} className="flex items-start py-2 border-b border-border/30 last:border-b-0">
+                  <span className="text-foreground">
+                    {typeof ingredient === 'string' ? ingredient : ingredient.name}
                   </span>
                 </li>
               ))}
@@ -110,58 +109,38 @@ export default function RecipeDrawer({
           <div className="space-y-3">
             <h3 className="text-lg font-semibold text-foreground">Instructions</h3>
             <ol className="space-y-3">
-              {recipe.instructions.map((instruction, idx) => (
+              {recipe.instructions && recipe.instructions.map((instruction, idx) => (
                 <li
                   key={idx}
                   className="flex gap-3 text-sm text-foreground"
                 >
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">
-                    {instruction.step}
+                    {idx + 1}
                   </span>
-                  <span>{instruction.instruction}</span>
+                  <span>{typeof instruction === 'string' ? instruction : instruction.instruction}</span>
                 </li>
               ))}
             </ol>
           </div>
 
           {/* Nutritional Information */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-foreground">Nutrition (per serving)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 bg-muted/30 rounded-lg text-center">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Calories
-                </div>
-                <div className="text-xl font-bold text-foreground mt-1">
-                  {recipe.nutrients.calories}
-                </div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg text-center">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Protein
-                </div>
-                <div className="text-xl font-bold text-foreground mt-1">
-                  {recipe.nutrients.protein}
-                </div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg text-center">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Carbs
-                </div>
-                <div className="text-xl font-bold text-foreground mt-1">
-                  {recipe.nutrients.carbs}
-                </div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg text-center">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Fat
-                </div>
-                <div className="text-xl font-bold text-foreground mt-1">
-                  {recipe.nutrients.fat}
-                </div>
+          {recipe.nutrients && Object.keys(recipe.nutrients).length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-foreground">Nutrition (per serving)</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.entries(recipe.nutrients).map(([key, value]) => (
+                  <div key={key} className="p-3 bg-muted/30 rounded-lg text-center">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </div>
+                    <div className="text-xl font-bold text-foreground mt-1">
+                      {value}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="border-t border-border p-6 flex justify-end gap-2 sticky bottom-0 bg-background">
